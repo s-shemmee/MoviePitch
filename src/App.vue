@@ -1,20 +1,30 @@
-<!-- App.vue -->
 <template>
   <div>
     <header>
-      <img src="./assets/logo-movie.png" alt="MoviePitch">
+      <img src="@/assets/logo-movie.png" alt="MoviePitch">
       <a href="/"><span>Movie</span>Pitch</a>
     </header>
     <main>
-      <SetupComponent @submit="handleSubmit" />
-      <OutputComponent :title="title" :stars="stars" :text="text" :imageUrl="imageUrl" @viewPitch="handleViewPitch" />
+      <MoviePitch />
     </main>
     <footer>
-      &copy; 2023 MoviePitch All rights reserved
+      &copy; {{ currentYear }} MoviePitch All rights reserved
     </footer>
   </div>
 </template>
 
 <script>
+import { defineComponent } from 'vue';
+import MoviePitch from '@/components/MoviePitch.vue';
 
+export default defineComponent({
+  components: {
+    MoviePitch,
+  },
+  data() {
+    return {
+      currentYear: new Date().getFullYear(),
+    };
+  },
+});
 </script>
