@@ -50,10 +50,14 @@
 
   const openai = new OpenAIApi(configuration);
 
+  const showLoadingIndicator = () => {
+    setupInputContainer.value.innerHTML = `<img src="@/assets/loading.svg" class="loading" id="loading">`;
+    movieBossText.value.innerText = `Ok, just wait a second while my digital brain digests that...`;
+  };
+
   const submitSetup = () => {
     if (userInput.value) {
-      setupInputContainer.value.innerHTML = `<img src="@/assets/loading.svg" class="loading" id="loading">`;
-      movieBossText.value.innerText = `Ok, just wait a second while my digital brain digests that...`;
+      showLoadingIndicator();
       fetchBotReply(userInput.value);
       fetchSynopsis(userInput.value);
     }
