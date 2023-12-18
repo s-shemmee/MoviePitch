@@ -13,24 +13,14 @@
   </div>
 </template>
 
-<script>
-import { defineComponent } from 'vue';
-import MoviePitch from '@/components/MoviePitch.vue';
+<script setup>
+  import { ref } from 'vue';
+  import MoviePitch from '@/components/MoviePitch.vue';
 
-export default defineComponent({
-  components: {
-    MoviePitch,
-  },
-  data() {
-    return {
-      currentYear: new Date().getFullYear(),
-    };
-  },
-});
+  const currentYear = ref(new Date().getFullYear());
 </script>
 
 <style scoped>
-
 header {
   background-color: var(--dark);
   display: flex;
