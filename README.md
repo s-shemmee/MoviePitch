@@ -51,7 +51,7 @@ To enhance MoviePitch further, consider the following ideas:
 
 To run MoviePitch locally, follow these steps:
 
-1. Clone the repository: `git clone https://github.com/yourusername/MoviePitch.git`
+1. Clone the repository: `git clone https://github.com/s-shemmee/MoviePitch.git`
 2. Install dependencies: `npm install`
 3. Configure the OpenAI API key in the project.
 4. Run the application: `npm run dev`
