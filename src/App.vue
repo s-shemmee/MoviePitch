@@ -61,7 +61,7 @@ footer {
   right: 0;
   background-color: var(--dark);
   color: var(--light);
-  padding: 8px;
+  padding: 16px 8px;
   font-size: 14px;
   text-align: center;
   z-index: 1000;
