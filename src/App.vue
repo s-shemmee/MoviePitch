@@ -1,7 +1,7 @@
 <template>
   <div>
     <header>
-      <img src="@/assets/logo-movie.png" alt="MoviePitch">
+      <img src="@/assets/logo.png" alt="MoviePitch">
       <a href="/"><span>Movie</span>Pitch</a>
     </header>
     <main>
@@ -14,10 +14,10 @@
 </template>
 
 <script setup>
-  import { ref } from 'vue';
-  import MoviePitch from '@/components/MoviePitch.vue';
+import { ref } from 'vue';
+import MoviePitch from '@/components/MoviePitch.vue';
 
-  const currentYear = ref(new Date().getFullYear());
+const currentYear = ref(new Date().getFullYear());
 </script>
 
 <style scoped>
@@ -30,11 +30,11 @@ header {
   z-index: 1000;
 }
 
-header>img {
+header > img {
   height: 26px;
 }
 
-header>a {
+header > a {
   color: var(--light);
   font-size: 24px;
   text-decoration: none;
