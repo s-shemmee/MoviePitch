@@ -1,16 +1,17 @@
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import path from 'path'
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import dotenv from 'dotenv';
+import path from 'path';
 
-// https://vitejs.dev/config/
+// Load environment variables from .env file
+dotenv.config();
+
+// Vite configuration
 export default defineConfig({
   plugins: [vue()],
   resolve: {
-    alias:{
-      '@': path.resolve(__dirname, './src'),
-    }
+    alias: {
+      '@': path.resolve(__dirname, './src'), // Alias '@' to 'src' directory
+    },
   },
-  optimizeDeps: {
-    exclude: ['openai'],
-  },
-})
+});
