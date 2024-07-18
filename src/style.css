@@ -19,7 +19,7 @@ body {
   font-family: 'Poppins';
   background-size: cover;
   background-repeat: repeat-y;
-  background-image: url('assets/moviepitchbg-dark.jpg');
+  background-image: url('assets/bg.jpg');
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -28,7 +28,6 @@ body {
 }
 
 /* Typography */
-
 h1 {
   font-family: 'Playfair Display SC', serif;
   text-align: center;
