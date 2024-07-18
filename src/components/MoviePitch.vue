@@ -1,25 +1,29 @@
 <template>
   <div>
-    <section id="setup-container">
+    <!-- Setup Section -->
+    <section id="setup-container" ref="setupInputContainer">
       <div class="setup-inner">
-        <img src="@/assets/movieboss.png" alt="MovieBoss">
+        <img src="@/assets/boss.png" alt="MovieBoss" />
+
         <div class="speech-bubble-ai" ref="speechBubble">
           <p ref="movieBossText">
             Give me a one-sentence concept, and I'll give you an eye-catching title, a synopsis the studios will love, a movie poster... AND choose the cast!
           </p>
         </div>
       </div>
-      <div class="setup-inner setup-input-container" ref="setupInputContainer">
+
+      <div class="setup-inner setup-input-container">
         <textarea v-model="userInput" id="setup-textarea" placeholder="An evil genius wants to take over the world using AI."></textarea>
         <button @click="submitSetup" class="send-btn" id="send-btn" aria-label="send">
-          <img src="@/assets/send-btn-icon.png" alt="send">
+          <img src="@/assets/send.png" alt="send" />
         </button>
       </div>
     </section>
 
-    <section class="output-container" id="output-container">
+    <!-- Output Section -->
+    <section class="output-container" id="output-container" v-if="showOutput">
       <div id="output-img-container" class="output-img-container">
-        <img :src="imageUrl" alt="Movie Poster">
+        <img :src="imageUrl" alt="Movie Poster" />
       </div>
       <h1 id="output-title">{{ title }}</h1>
       <h2 id="output-stars">{{ stars }}</h2>
@@ -33,7 +37,13 @@
 
 <script setup>
   import { ref } from 'vue';
-  import { Configuration, OpenAIApi } from 'openai';
+  import OpenAI from 'openai';
+
+  // Load the API key from the environment variable
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+
+  // Initialize OpenAI client
+  const openai = new OpenAI(apiKey);
 
   // Reactive Variables
   const userInput = ref("");
@@ -41,16 +51,10 @@
   const title = ref("");
   const stars = ref("");
   const text = ref("");
+  const showOutput = ref(false);
   const setupInputContainer = ref(null);
   const movieBossText = ref(null);
-
-  // OpenAI Configuration
-  const configuration = new Configuration({
-    apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-  });
-
-  // OpenAI API Instance
-  const openai = new OpenAIApi(configuration);
+  const speechBubble = ref(null);
 
   // Show Loading Indicator
   const showLoadingIndicator = () => {
@@ -59,125 +63,136 @@
   };
 
   // Submit User Input
-  const submitSetup = () => {
+  const submitSetup = async () => {
     if (userInput.value) {
       showLoadingIndicator();
-      fetchBotReply(userInput.value);
-      fetchSynopsis(userInput.value);
+      await fetchBotReply(userInput.value);
+      await fetchSynopsis(userInput.value);
     }
   };
 
   // Fetch Bot Reply
   const fetchBotReply = async (outline) => {
     try {
-      // API Call to OpenAI for Bot Reply
-      const response = await openai.createCompletion({
-        model: 'text-davinci-003',
-        prompt: `Generate a short message to enthusiastically say an outline sounds interesting and that you need some minutes to think about it.
-        ###
-        outline: ${outline}
-        message: 
-        `,
+      const response = await openai.createChatCompletion({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'user',
+            content: `Generate a short message to enthusiastically say an outline sounds interesting and that you need some minutes to think about it.
+            ###
+            outline: ${outline}
+            message: `,
+          },
+        ],
         max_tokens: 60,
       });
 
-      movieBossText.value.innerText = response.data.choices[0].text.trim();
+      movieBossText.value.innerText = response.data.choices[0].message.content.trim();
     } catch (error) {
       console.error('Error fetching bot reply:', error);
-      // Handle errors as needed
     }
   };
 
   // Fetch Synopsis
   const fetchSynopsis = async (outline) => {
     try {
-      // API Call to OpenAI for Synopsis
-      const response = await openai.createCompletion({
-        model: 'text-davinci-003',
-        prompt: `Generate an engaging, professional and marketable movie synopsis based on an outline. The synopsis should include actors names in brackets after each character. Choose actors that would be ideal for this role. 
-        ###
-        outline: ${outline}
-        synopsis: 
-        `,
+      const response = await openai.createChatCompletion({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'user',
+            content: `Generate an engaging, professional and marketable movie synopsis based on an outline. The synopsis should include actors names in brackets after each character. Choose actors that would be ideal for this role. 
+            ###
+            outline: ${outline}
+            synopsis: `,
+          },
+        ],
         max_tokens: 700,
       });
 
-      const synopsis = response.data.choices[0].text.trim();
+      const synopsis = response.data.choices[0].message.content.trim();
       text.value = synopsis;
       await fetchTitle(synopsis);
       await fetchStars(synopsis);
+      await fetchImagePrompt(title.value, synopsis);
     } catch (error) {
       console.error('Error fetching synopsis:', error);
-      // Handle errors as needed
-    } 
+    }
   };
 
   // Fetch Movie Title
   const fetchTitle = async (synopsis) => {
     try {
-      // API Call to OpenAI for Movie Title
-      const response = await openai.createCompletion({
-        model: 'text-davinci-003',
-        prompt: `Generate a catchy movie title for this synopsis: ${synopsis}`,
+      const response = await openai.createChatCompletion({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'user',
+            content: `Generate a catchy movie title for this synopsis: ${synopsis}`,
+          },
+        ],
         max_tokens: 25,
         temperature: 0.7,
       });
 
-      title.value = response.data.choices[0].text.trim();
+      title.value = response.data.choices[0].message.content.trim();
     } catch (error) {
       console.error('Error fetching title:', error);
-      // Handle errors as needed
     }
   };
 
   // Fetch Cast Stars
   const fetchStars = async (synopsis) => {
     try {
-      // API Call to OpenAI for Cast Stars
-      const response = await openai.createCompletion({
-        model: 'text-davinci-003',
-        prompt: `Extract the names in brackets from the synopsis.
-        ###
-        synopsis: ${synopsis}
-        names:   
-        `,
+      const response = await openai.createChatCompletion({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'user',
+            content: `Extract the names in brackets from the synopsis.
+            ###
+            synopsis: ${synopsis}
+            names: `,
+          },
+        ],
         max_tokens: 30,
       });
 
-      stars.value = response.data.choices[0].text.trim();
+      stars.value = response.data.choices[0].message.content.trim();
     } catch (error) {
       console.error('Error fetching stars:', error);
-      // Handle errors as needed
     }
   };
 
   // Fetch Image Prompt and URL
   const fetchImagePrompt = async (title, synopsis) => {
     try {
-      // API Call to OpenAI for Image Prompt
-      const response = await openai.createCompletion({
-        model: 'text-davinci-003',
-        prompt: `Give a short description of an image which could be used to advertise a movie based on a title and synopsis. The description should be rich in visual detail but contain no names.
-        ###
-        title: ${title}
-        synopsis: ${synopsis}
-        image description: 
-        `,
+      const response = await openai.createChatCompletion({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'user',
+            content: `Give a short description of an image which could be used to advertise a movie based on a title and synopsis. The description should be rich in visual detail but contain no names.
+            ###
+            title: ${title}
+            synopsis: ${synopsis}
+            image description: `,
+          },
+        ],
         temperature: 0.8,
         max_tokens: 100,
       });
 
-      fetchImageUrl(response.data.choices[0].text.trim());
+      await fetchImageUrl(response.data.choices[0].message.content.trim());
     } catch (error) {
       console.error('Error fetching image prompt:', error);
-      // Handle errors as needed
     }
   };
 
   // Fetch Image URL
   const fetchImageUrl = async (imagePrompt) => {
     try {
-      // API Call to OpenAI for Image URL
       const response = await openai.createImage({
         prompt: `${imagePrompt}. There should be no text in this image.`,
         n: 1,
@@ -186,15 +201,9 @@
       });
 
       imageUrl.value = `data:image/png;base64,${response.data.data[0].b64_json}`;
-      setupInputContainer.value.innerHTML = `<button id="view-pitch-btn" class="view-pitch-btn">View Pitch</button>`;
-      setupInputContainer.value.querySelector('#view-pitch-btn').addEventListener('click', () => {
-        setupInputContainer.value.querySelector('#setup-container').style.display = 'none';
-        setupInputContainer.value.querySelector('#output-container').style.display = 'flex';
-        movieBossText.value.innerText = `This idea is so good I'm jealous! It's gonna make you rich for sure! Remember, I want 10% 💰`;
-      });
+      showOutput.value = true;
     } catch (error) {
       console.error('Error fetching image URL:', error);
-      // Handle errors as needed
     }
   };
 
@@ -207,7 +216,7 @@
 </script>
 
 <style scoped>
-
+/* General Styles */
 section {
   position: fixed;
   top: 50%;
@@ -222,8 +231,7 @@ section {
   z-index: 1000;
 }
 
-/* Setup */
-
+/* Setup Section */
 .setup-inner {
   display: flex;
   justify-content: space-around;
@@ -231,7 +239,7 @@ section {
   min-height: 234px;
 }
 
-.setup-inner>img {
+.setup-inner > img {
   width: 40%;
   filter: drop-shadow(3px 2px 3px var(--medium-dark));
   align-self: center;
@@ -276,7 +284,7 @@ section {
   top: 68px;
 }
 
-.speech-bubble-ai>p {
+.speech-bubble-ai > p {
   padding: 0 1.3em;
   color: var(--dark);
   font-size: 14px;
@@ -303,9 +311,8 @@ textarea::placeholder {
   opacity: 0.8;
 }
 
-/* Larger mobiles+ */
-
-@media(min-width: 380px) {
+/* Larger Mobile Screens */
+@media (min-width: 380px) {
   .setup-input-container {
     padding-top: 0;
   }
@@ -318,7 +325,7 @@ textarea::placeholder {
     top: 96px;
   }
 
-  .speech-bubble-ai>p {
+  .speech-bubble-ai > p {
     font-size: 16px;
   }
 
@@ -328,16 +335,20 @@ textarea::placeholder {
   }
 }
 
-/* Buttons & SVG */
-
+/* Buttons and SVG */
 button {
   border: none;
   background: var(--pink);
   cursor: pointer;
+  transition: background-color 0.3s;
 }
 
 button:hover {
   background-color: var(--dark);
+}
+
+button:focus {
+  outline: 2px solid var(--medium-dark);
 }
 
 .send-btn {
@@ -346,7 +357,7 @@ button:hover {
   min-width: 50px;
 }
 
-.send-btn>img {
+.send-btn > img {
   width: 1.6em;
   vertical-align: middle;
 }
@@ -358,6 +369,7 @@ button:hover {
   margin: 4px auto;
   display: block;
   font-size: 18px;
+  transition: box-shadow 0.3s;
 }
 
 .view-pitch-btn:hover {
@@ -369,8 +381,7 @@ img.loading {
   filter: none;
 }
 
-/* Output */
-
+/* Output Section */
 .output-container {
   display: none;
   flex-direction: column;
@@ -379,10 +390,9 @@ img.loading {
   padding: 16px;
 }
 
-.output-img-container>img {
+.output-img-container > img {
   width: 100%;
   border-radius: var(--border-rad-lg);
   box-shadow: 1px 1px 5px 1px var(--dark);
 }
-
 </style>
