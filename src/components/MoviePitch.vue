@@ -13,22 +13,50 @@
       </div>
 
       <div class="setup-inner setup-input-container">
-        <textarea v-model="userInput" id="setup-textarea" placeholder="An evil genius wants to take over the world using AI."></textarea>
-        <button @click="submitSetup" class="send-btn" id="send-btn" aria-label="send">
-          <img src="@/assets/send.png" alt="send" />
+        <textarea 
+          v-model="userInput" 
+          id="setup-textarea" 
+          placeholder="An evil genius wants to take over the world using AI."
+        ></textarea>
+        <button 
+          @click="submitSetup" 
+          class="send-btn" 
+          id="send-btn" 
+          aria-label="send" 
+          :disabled="isLoading"
+        >
+          <img 
+            v-if="!isLoading" 
+            src="@/assets/send.png" 
+            alt="send" 
+          />
+          <img 
+            v-else 
+            src="@/assets/loading.svg" 
+            alt="loading" 
+            class="loading-icon"
+          />
         </button>
       </div>
     </section>
 
     <!-- Output Section -->
-    <section class="output-container" id="output-container" v-if="showOutput">
-      <div id="output-img-container" class="output-img-container">
+    <section 
+      class="output-container" 
+      id="output-container" 
+      v-if="showOutput"
+    >
+      <div class="output-img-container">
         <img :src="imageUrl" alt="Movie Poster" />
       </div>
-      <h1 id="output-title">{{ title }}</h1>
-      <h2 id="output-stars">{{ stars }}</h2>
-      <p id="output-text">{{ text }}</p>
-      <button class="view-pitch-btn" @click="viewPitch" aria-label="View Pitch">
+      <h1>{{ title }}</h1>
+      <h2>{{ stars }}</h2>
+      <p>{{ text }}</p>
+      <button 
+        class="view-pitch-btn" 
+        @click="viewPitch" 
+        aria-label="View Pitch"
+      >
         View Pitch
       </button>
     </section>
@@ -36,183 +64,144 @@
 </template>
 
 <script setup>
-  import { ref } from 'vue';
-  import OpenAI from 'openai';
+import { ref } from 'vue';
+//import OpenAI from 'openai';
 
-  // Load the API key from the environment variable
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+//const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+//const openai = new OpenAI(apiKey);
 
-  // Initialize OpenAI client
-  const openai = new OpenAI(apiKey);
+// Reactive Variables
+const userInput = ref("");
+const imageUrl = ref("");
+const title = ref("");
+const stars = ref("");
+const text = ref("");
+const showOutput = ref(false);
+const isLoading = ref(false);
+const movieBossText = ref(null);
 
-  // Reactive Variables
-  const userInput = ref("");
-  const imageUrl = ref("");
-  const title = ref("");
-  const stars = ref("");
-  const text = ref("");
-  const showOutput = ref(false);
-  const setupInputContainer = ref(null);
-  const movieBossText = ref(null);
-  const speechBubble = ref(null);
+// Helper Functions
+const showLoading = (message) => {
+  isLoading.value = true;
+  movieBossText.value.innerText = message || "Processing your idea, give me a moment...";
+};
 
-  // Show Loading Indicator
-  const showLoadingIndicator = () => {
-    setupInputContainer.value.innerHTML = `<img src="@/assets/loading.svg" class="loading" id="loading">`;
-    movieBossText.value.innerText = `Ok, just wait a second while my digital brain digests that...`;
-  };
+const resetLoading = () => {
+  isLoading.value = false;
+};
 
-  // Submit User Input
-  const submitSetup = async () => {
-    if (userInput.value) {
-      showLoadingIndicator();
-      await fetchBotReply(userInput.value);
-      await fetchSynopsis(userInput.value);
-    }
-  };
+const handleError = (error, userMessage) => {
+  console.error(error);
+  movieBossText.value.innerText = userMessage || "Something went wrong. Please try again.";
+};
 
-  // Fetch Bot Reply
-  const fetchBotReply = async (outline) => {
-    try {
-      const response = await openai.createChatCompletion({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'user',
-            content: `Generate a short message to enthusiastically say an outline sounds interesting and that you need some minutes to think about it.
-            ###
-            outline: ${outline}
-            message: `,
-          },
-        ],
-        max_tokens: 60,
-      });
+// Submit User Input
+const submitSetup = async () => {
+  if (!userInput.value.trim()) {
+    alert("Please enter a valid movie concept.");
+    return;
+  }
+  showLoading("Hold tight! Movie magic in progress...");
+  try {
+    await generateMoviePitch(userInput.value);
+  } catch (error) {
+    handleError(error, "Oops! I couldn't process your idea. Try again.");
+  } finally {
+    resetLoading();
+  }
+};
 
-      movieBossText.value.innerText = response.data.choices[0].message.content.trim();
-    } catch (error) {
-      console.error('Error fetching bot reply:', error);
-    }
-  };
+// Generate Full Movie Pitch
+const generateMoviePitch = async (outline) => {
+  try {
+    await fetchBotReply(outline);
+    const synopsis = await fetchSynopsis(outline);
+    title.value = await fetchTitle(synopsis);
+    stars.value = await fetchStars(synopsis);
+    imageUrl.value = await fetchImage(synopsis);
+    showOutput.value = true;
+  } catch (error) {
+    handleError(error, "Something went wrong while creating your pitch.");
+    throw error; // Propagate to stop further execution.
+  }
+};
 
-  // Fetch Synopsis
-  const fetchSynopsis = async (outline) => {
-    try {
-      const response = await openai.createChatCompletion({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'user',
-            content: `Generate an engaging, professional and marketable movie synopsis based on an outline. The synopsis should include actors names in brackets after each character. Choose actors that would be ideal for this role. 
-            ###
-            outline: ${outline}
-            synopsis: `,
-          },
-        ],
-        max_tokens: 700,
-      });
+// Fetch Bot Reply
+const fetchBotReply = async (outline) => {
+  return await fetchFromAPI({
+    prompt: `This outline sounds interesting: ${outline}. Give a short enthusiastic reply.`,
+    maxTokens: 60,
+    updateUI: (data) => {
+      movieBossText.value.innerText = data.trim();
+    },
+    errorMessage: "Couldn't get a response. Please try again.",
+  });
+};
 
-      const synopsis = response.data.choices[0].message.content.trim();
-      text.value = synopsis;
-      await fetchTitle(synopsis);
-      await fetchStars(synopsis);
-      await fetchImagePrompt(title.value, synopsis);
-    } catch (error) {
-      console.error('Error fetching synopsis:', error);
-    }
-  };
+// Fetch Synopsis
+const fetchSynopsis = async (outline) => {
+  return await fetchFromAPI({
+    prompt: `Generate a professional movie synopsis for: ${outline}. Include actors' names in brackets.`,
+    maxTokens: 700,
+    errorMessage: "Failed to fetch a synopsis. Please try again.",
+  });
+};
 
-  // Fetch Movie Title
-  const fetchTitle = async (synopsis) => {
-    try {
-      const response = await openai.createChatCompletion({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'user',
-            content: `Generate a catchy movie title for this synopsis: ${synopsis}`,
-          },
-        ],
-        max_tokens: 25,
-        temperature: 0.7,
-      });
+// Fetch Movie Title
+const fetchTitle = async (synopsis) => {
+  return await fetchFromAPI({
+    prompt: `Suggest a catchy title for this movie synopsis: ${synopsis}`,
+    maxTokens: 25,
+    errorMessage: "Couldn't generate a title. Please try again.",
+  });
+};
 
-      title.value = response.data.choices[0].message.content.trim();
-    } catch (error) {
-      console.error('Error fetching title:', error);
-    }
-  };
+// Fetch Stars
+const fetchStars = async (synopsis) => {
+  return await fetchFromAPI({
+    prompt: `Extract actors' names in brackets from: ${synopsis}`,
+    maxTokens: 30,
+    errorMessage: "Failed to fetch cast details. Please try again.",
+  });
+};
 
-  // Fetch Cast Stars
-  const fetchStars = async (synopsis) => {
-    try {
-      const response = await openai.createChatCompletion({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'user',
-            content: `Extract the names in brackets from the synopsis.
-            ###
-            synopsis: ${synopsis}
-            names: `,
-          },
-        ],
-        max_tokens: 30,
-      });
+// Fetch Image
+const fetchImage = async (synopsis) => {
+  try {
+    const response = await openai.createImage({
+      prompt: `${synopsis}. A detailed movie poster without text.`,
+      n: 1,
+      size: '512x512',
+      response_format: 'b64_json',
+    });
+    return `data:image/png;base64,${response.data.data[0].b64_json}`;
+  } catch (error) {
+    throw new Error("Image generation failed.");
+  }
+};
 
-      stars.value = response.data.choices[0].message.content.trim();
-    } catch (error) {
-      console.error('Error fetching stars:', error);
-    }
-  };
+// Generic Fetch Function
+const fetchFromAPI = async ({ prompt, maxTokens, updateUI, errorMessage }) => {
+  try {
+    const response = await openai.createChatCompletion({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: maxTokens,
+    });
+    const result = response.data.choices[0].message.content.trim();
+    if (updateUI) updateUI(result);
+    return result;
+  } catch (error) {
+    handleError(error, errorMessage);
+    throw error;
+  }
+};
 
-  // Fetch Image Prompt and URL
-  const fetchImagePrompt = async (title, synopsis) => {
-    try {
-      const response = await openai.createChatCompletion({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'user',
-            content: `Give a short description of an image which could be used to advertise a movie based on a title and synopsis. The description should be rich in visual detail but contain no names.
-            ###
-            title: ${title}
-            synopsis: ${synopsis}
-            image description: `,
-          },
-        ],
-        temperature: 0.8,
-        max_tokens: 100,
-      });
-
-      await fetchImageUrl(response.data.choices[0].message.content.trim());
-    } catch (error) {
-      console.error('Error fetching image prompt:', error);
-    }
-  };
-
-  // Fetch Image URL
-  const fetchImageUrl = async (imagePrompt) => {
-    try {
-      const response = await openai.createImage({
-        prompt: `${imagePrompt}. There should be no text in this image.`,
-        n: 1,
-        size: '256x256',
-        response_format: 'b64_json',
-      });
-
-      imageUrl.value = `data:image/png;base64,${response.data.data[0].b64_json}`;
-      showOutput.value = true;
-    } catch (error) {
-      console.error('Error fetching image URL:', error);
-    }
-  };
-
-  // Switch to Output View
-  const viewPitch = () => {
-    document.getElementById('setup-container').style.display = 'none';
-    document.getElementById('output-container').style.display = 'flex';
-    movieBossText.value.innerText = `This idea is so good I'm jealous! It's gonna make you rich for sure! Remember, I want 10% 💰`;
-  };
+// Switch to Output View
+const viewPitch = () => {
+  document.getElementById('setup-container').style.display = 'none';
+  document.getElementById('output-container').style.display = 'block';
+};
 </script>
 
 <style scoped>
@@ -250,8 +239,8 @@ section {
 }
 
 .speech-bubble-ai {
-  max-width: 55%;
-  min-height: 124px;
+  max-width: 100%;
+  min-height: 120px;
   border-radius: var(--border-rad-lg);
   position: relative;
   margin: 0;
