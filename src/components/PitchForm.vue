@@ -138,7 +138,7 @@ watch(userInput, async (val) => {
 }
 
 .setup-input-container {
-  min-height: 56px; 
+  min-height: 60px; 
   align-items: stretch; 
   gap: 0;
 }
@@ -157,7 +157,7 @@ watch(userInput, async (val) => {
 
 textarea {
   width: 100%;
-  min-height: 56px;
+  min-height: 60px;
   max-height: 120px;
 
   box-sizing: border-box;
