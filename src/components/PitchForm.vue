@@ -218,13 +218,8 @@ textarea:disabled {
 }
 
 .loading-icon {
-  animation: spin 0.8s linear infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .loading-icon {
-    animation-duration: 1.6s;
-  }
+  width: 32px;
+  height: auto;
 }
 
 @keyframes spin {
