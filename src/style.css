@@ -3,33 +3,38 @@
   --light: whitesmoke;
   --light-grey: #e8e8e8;
   --pink: #ff176b;
-  --medium-dark: #777;
+  --pink-accessible: #e0115f;
+  --medium-dark: #6b6b6b;
   --dark: #242526;
   --border-rad-lg: 15px;
+  --focus-ring: 2px solid var(--dark);
+  --focus-ring-offset: 2px;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
+  min-height: 100%;
   font-size: 16px;
-  height: 100%;
 }
 
 body {
-  font-family: 'Poppins';
+  font-family: "Poppins", sans-serif;
+  background-image: url("assets/bg.jpg");
   background-size: cover;
   background-repeat: repeat-y;
-  background-image: url('assets/bg.jpg');
-  height: 100vh;
+
+  min-height: 100vh;
+
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  min-height: 100vh;
 }
 
 /* Typography */
+
 h1 {
-  font-family: 'Playfair Display SC', serif;
+  font-family: "Playfair Display SC", serif;
   text-align: center;
 }
 
@@ -39,4 +44,24 @@ h2 {
 
 p {
   line-height: 1.35em;
+}
+
+/* Global focus visibility — consistent ring across all interactive elements */
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* Respect reduced-motion preference site-wide */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
