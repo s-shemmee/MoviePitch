@@ -9,8 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@google/genai": "^2.19.0",
     "dotenv": "^16.4.5",
-    "openai": "^4.52.7",
     "vue": "^3.3.11"
   },
   "devDependencies": {
