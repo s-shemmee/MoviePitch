@@ -2,11 +2,28 @@ import { ai, TEXT_MODEL, SYSTEM_PROMPT, PITCH_SCHEMA } from "../lib/gemini.js";
 
 const MIN_LENGTH = 3;
 const MAX_LENGTH = 300;
+const WINDOW_MS = 60_000;
+const MAX_REQUESTS = 10;
+const hits = new Map();
+
+function isRateLimited(req) {
+  const ip =
+    req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.socket?.remoteAddress || "unknown";
+  const now = Date.now();
+  const timestamps = (hits.get(ip) || []).filter((t) => now - t < WINDOW_MS);
+  timestamps.push(now);
+  hits.set(ip, timestamps);
+  return timestamps.length > MAX_REQUESTS;
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Method not allowed." });
+  }
+
+  if (isRateLimited(req)) {
+    return res.status(429).json({ error: "Too many requests. Please try again later." });
   }
 
   const idea = typeof req.body?.idea === "string" ? req.body.idea.trim() : "";
