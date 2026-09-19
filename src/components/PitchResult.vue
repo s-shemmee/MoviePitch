@@ -50,6 +50,8 @@ const { title, synopsis, cast, imageUrl, startOver } = useMoviePitch();
 
   border-radius: 20px;
   box-shadow: 0 4px 20px rgba(36, 37, 38, 0.35);
+  cursor: pointer;
+  user-select: none;
 }
 
 /* Poster */
@@ -82,6 +84,8 @@ const { title, synopsis, cast, imageUrl, startOver } = useMoviePitch();
   font-size: 36px;
   line-height: 1.1;
   text-align: left;
+  cursor: pointer;
+  user-select: none;
 }
 
 /* Cast */
@@ -114,6 +118,8 @@ const { title, synopsis, cast, imageUrl, startOver } = useMoviePitch();
   line-height: 1.5;
 
   color: var(--medium-dark);
+  cursor: pointer;
+  user-select: none;
 }
 
 /* Synopsis */
@@ -127,6 +133,8 @@ const { title, synopsis, cast, imageUrl, startOver } = useMoviePitch();
   font-family: "Poppins", sans-serif;
   font-size: 16px;
   line-height: 1.7;
+  cursor: pointer;
+  user-select: none;
 }
 
 /* New pitch */

@@ -125,6 +125,8 @@ watch(userInput, async (val) => {
   border-radius: 18px;
 
   background-color: var(--white);
+  cursor: pointer;
+  user-select: none;
 }
 
 .speech-bubble-ai > p {
@@ -135,6 +137,8 @@ watch(userInput, async (val) => {
   font-family: "Poppins", sans-serif;
   font-size: 16px;
   line-height: 1.5;
+  cursor: pointer;
+  user-select: none;
 }
 
 .setup-input-container {
