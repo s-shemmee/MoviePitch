@@ -8,7 +8,7 @@ The app is scoped on purpose: it's not a general-purpose chatbot wearing a movie
 
 **Live demo:** [MoviePitch](https://moviepitch-shemmee.vercel.app/)
 
-<video controls src="MoviePitch_Demo.mp4" title="Movie Pitch Interface"></video>
+<video controls src="https://github.com/user-attachments/assets/c4b30a2c-54d2-406b-b2e8-8fce5fc1c52c" title="Movie Pitch Interface"></video>
 
 ## How It Works
 
