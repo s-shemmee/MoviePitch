@@ -6,7 +6,7 @@ MoviePitch turns a one-sentence idea into a full movie concept — a title, a sy
 
 The app is scoped on purpose: it's not a general-purpose chatbot wearing a movie-themed skin. A guarded backend prompt evaluates every submission and only ever produces a movie pitch (or a friendly redirect if the input isn't one), no matter how the input is phrased.
 
-**Live demo:** [[moviepitch-shemmee.vercel.app](https://moviepitch-shemmee.vercel.app/)]
+**Live demo:** [MoviePitch](https://moviepitch-shemmee.vercel.app/)
 
 ![Movie Pitch Interface](src/assets/Capture.JPG)
 
